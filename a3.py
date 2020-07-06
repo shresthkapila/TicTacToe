@@ -4,11 +4,9 @@
 # ...
 
 import random
-
-flag = False
+import copy
 
 class tictactoe:
-
     # --representation/moves in tictactoe (stored as an array)
     # 0 1 2
     # 3 4 5
@@ -17,6 +15,7 @@ class tictactoe:
     def __init__(self):
         self.structure = ['-'] * 9            # let 0 be the initial state of game
         self.currentPlayer = 'h'              # h <- human
+        self.flag = 1
 
     def getStructure(self):
         return self.structure
@@ -24,18 +23,27 @@ class tictactoe:
     def getCurrentPlayer(self):
         return self.currentPlayer
     
+    def getFlag(self):
+        return self.flag
+
     def nextPlayer(self):
         if (self.currentPlayer == 'h'):
             self.currentPlayer = 'c'           # c <- (turn of) computer
         elif (self.currentPlayer == 'c'):
             self.currentPlayer = 'h'
         return self.currentPlayer
-    
+
+    def setFlag(self, setFlag):
+        if setFlag == True:
+            return self.flag
+        else:
+            self.flag = 2
+            return self.flag
 
     def displayGame(self):
+        print("-------------GAME STRUCTURE------------------")
         print("-----------------")
         gameArray = ['-'] * 9
-
         for i in range(9):
             if (self.structure[i] == 'h'):
                 gameArray[i] = 'X'
@@ -64,22 +72,17 @@ class tictactoe:
 
     def playerWon(self, player, winLine):
         # return, True <- player wins, False otherwise 
-        
         p0 = self.structure[winLine[0]]
         p1 = self.structure[winLine[1]]
         p2 = self.structure[winLine[2]]
-
         if p0 == p1 == p2 == player:
             return True
-
         return False    
 
     def checkStatus(self):
         # check the status of game won, loss, draw
         #   return, 1 = human win, 2 = computer win, 0 = draw, -1 = still going
-
         # check all the conditions: a person can win if same player is at position [0 1 2, 3 4 5, 6 7 8, 0 3 6, 1 4 7, 2 5 8, 0 4 8, 2 4 6]
-
         if self.playerWon('h', [0, 1, 2]):
             return 1
         elif self.playerWon('c', [0, 1, 2]):
@@ -132,46 +135,50 @@ class tictactoe:
                 moves.append(i)
         return moves
 
+    def temp_puzzle(self):
+        temp_game = tictactoe()
+        temp_game.structure = self.structure[:]
+        temp_game.currentPlayer = self.currentPlayer
+        temp_game.flag = self.flag
+        return temp_game
 
-            
+    
 class MonteCarloSearchTree():
 
     def __init__(self, game):
         self.game = game
-        # self.playouts = 10000
+        self.structure = self.game.getStructure()
+        self.state = self.game.checkStatus()
+        self.playouts = 10000
 
-    def randomPlayOuts(self, move, legal_moves):
-        temp_game = tictactoe()
-        temp_game.structure = self.game.structure[:]
-        temp_game.currentPlayer = self.game.getCurrentPlayer()
+    def randomPlayOuts(self, move):
+        temp_game = copy.deepcopy(self.game) #self.game.temp_puzzle()
         temp_game.makeMove(move, temp_game.currentPlayer)
         temp_game.nextPlayer()
         status = temp_game.checkStatus()
-
         while status == -1:
+            legal_moves = temp_game.legalMoves()
             randomMove = random.randint(0,8)
-
             while randomMove not in legal_moves:
                 randomMove = random.randint(0,8)
             temp_game.makeMove(randomMove, temp_game.currentPlayer)
             temp_game.nextPlayer()
+            temp_game.state = temp_game.checkStatus()
             status = temp_game.checkStatus()
-
-        if flag == False:
+        if temp_game.getFlag == 1:
             if status == 1:
                 return 2
             elif status == 2:
-                return -2
+                return -5
             else:
                 return 1
         else:
             if status == 1:
-                return -2
+                return -5
             elif status == 2:
                 return 2
             else:
                 return 1
-
 
     def makeMove(self):
         legal_moves = self.game.legalMoves()
@@ -179,16 +186,17 @@ class MonteCarloSearchTree():
         # print(maxWins)
         for i in legal_moves:
             for j in range(10000):
-                maxWins[i] = maxWins[i] + self.randomPlayOuts(i, legal_moves)
-        print(maxWins)
+                maxWins[i] = maxWins[i] + self.randomPlayOuts(i)
+        # print(maxWins)
         maxW = legal_moves[0]
         count = maxWins[maxW]
-        for k in maxWins:
-            if count < maxWins[k]:
-                maxW = k
-                count = maxWins[k]
+        for m in maxWins:
+            if count <= maxWins[m]:
+                maxW = m 
+                count = maxWins[m]
         self.game.makeMove(maxW, self.game.currentPlayer)
 
+# Display game structure
 def gamePosition():
     print("-------------------")
     print("|  0  |  1  |  2  |")
@@ -198,63 +206,73 @@ def gamePosition():
     print("|  6  |  7  |  8  |")
     print("-------------------\n")
 
-
+# Running game
 def play_a_new_game():
     game = tictactoe()
     mcst = MonteCarloSearchTree(game)
-    
     status = game.checkStatus()
     print("\nHere the game begins, GOOD LUCK!!!")
-    start = input("\nWanna start first? (y/n): ")
-
+    start = input("\nWanna start first? (type y/n): ")
     if(start.lower() == 'y'):
+        game.setFlag(False)
         print("\nHere are the number on the tile of the game")
         gamePosition()
         game.displayGame()
-        flag = True
         move = input("\nEnter the number of the tile to make your move: ")
     elif (start.lower() == 'n'):
         game.nextPlayer()
         mcst.makeMove()
         game.nextPlayer()
+        print("\nHere are the number on the tile of the game")
+        gamePosition()
         game.displayGame()
         move = input("\nEnter the number of the tile to make your move: ")
     else:
+        game.setFlag(False)
         print("\nLooks like you are confused, I will let you start first!!")
         print("\nHere are the number on the tile of the game")
         gamePosition()
         game.displayGame()
         move = input("\nEnter the number of the tile to make your move: ")
-
     while (status == -1):
         game.makeMove(move, game.getCurrentPlayer())
+        print("\nHere are the number on the tile of the game")
+        gamePosition()
         game.displayGame()
-
         # print(game.getCurrentPlayer())
         game.nextPlayer()
         # print(game.getCurrentPlayer())
-        
-        status = game.checkStatus()
+        # status = game.checkStatus()
         # print(status)
         mcst.makeMove()
         status = game.checkStatus()
         # print(status)
         if (status == -1):
             game.nextPlayer()
+            print("\nHere are the number on the tile of the game")
+            gamePosition()
             game.displayGame()
             move = input("\nEnter the number of the tile to make your move: ")
-            game.makeMove(move, game.getCurrentPlayer())
+            # temp_game = tictactoe()
+            # temp_game.structure = game.structure[:]
+            # temp_game.currentPlayer = game.getCurrentPlayer()
+            temp_game = game.temp_puzzle()
+            game.makeMove(move, temp_game.getCurrentPlayer())
+            print("\nHere are the number on the tile of the game")
+            gamePosition()
             game.displayGame()
             status = game.checkStatus()
             # print(status)
     game.makeMove(move, game.getCurrentPlayer())
-
+    print("\nHere are the number on the tile of the game")
+    gamePosition()
+    game.displayGame()
     if status == 1:
-        print("Congratulations: You WON")
+        print("\nCongratulations: You WON\n")
     elif status == 2:
-        print("You lost, trya again")
+        print("\nYou lost, trya again\n")
     else:
-        print("DRAW: No one wins")
+        print("\nDRAW: No one wins\n")
 
 
 if __name__ == '__main__':
