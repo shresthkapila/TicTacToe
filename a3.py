@@ -6,6 +6,8 @@
 import random
 import copy
 
+# first = False
+
 class tictactoe:
     # --representation/moves in tictactoe (stored as an array)
     # 0 1 2
@@ -150,7 +152,7 @@ class MonteCarloSearchTree():
         self.game = game
         self.structure = self.game.getStructure()
         self.state = self.game.checkStatus()
-        self.playouts = 1000
+        self.playouts = 5000
 
     def randomPlayOuts(self, move):
         temp_game = copy.deepcopy(self.game) #self.game.temp_puzzle()
@@ -182,11 +184,13 @@ class MonteCarloSearchTree():
                 return 1
 
     def makeMove(self):
+        # print(first)
+        # if first == True:
         legal_moves = self.game.legalMoves()
         maxWins = {k: 0 for k in legal_moves}
         # print(maxWins)
         for i in legal_moves:
-            for j in range(1000):
+            for _ in range(5000):
                 maxWins[i] = maxWins[i] + self.randomPlayOuts(i)
         # print(maxWins)
         maxW = legal_moves[0]
@@ -196,6 +200,12 @@ class MonteCarloSearchTree():
                 maxW = m 
                 count = maxWins[m]
         self.game.makeMove(maxW, self.game.currentPlayer)
+        # else:
+        #     legal_moves = self.game.legalMoves()
+        #     r = random.randint(0,8)
+        #     while r not in legal_moves and r != 4:
+        #         r = random.randint(0,8)
+        #     self.game.makeMove(r, self.game.currentPlayer)
 
 # Display game structure
 def gamePosition():
@@ -219,6 +229,8 @@ def play_a_new_game():
         start = input("\nWanna start first? (type y/n): ")
         if(start.lower() == 'y'):
             game.setFlag(False)
+            # first = False
+            print("\n-------Your Turn-------")
             print("\nHere are the number on the tile of the game")
             gamePosition()
             game.displayGame()
@@ -227,12 +239,12 @@ def play_a_new_game():
             game.nextPlayer()
             mcst.makeMove()
             game.nextPlayer()
-            print("\nHere are the number on the tile of the game")
-            gamePosition()
+            print("\n****Computer will move......\n")
             game.displayGame()
             move = input("\nEnter the number of the tile to make your move: ")
         else:
             game.setFlag(False)
+            print("\n-------Your Turn-------")
             print("\nLooks like you are confused, I will let you start first!!")
             print("\nHere are the number on the tile of the game")
             gamePosition()
@@ -246,10 +258,14 @@ def play_a_new_game():
             # print(game.getCurrentPlayer())
             game.nextPlayer()
             mcst.makeMove()
+            # first = True
             status = game.checkStatus()
+            print("\n****Computer will move......\n")
+            game.displayGame()
             # print(status)
             if (status == -1):
                 game.nextPlayer()
+                print("\n-------Your Turn-------")
                 print("\nHere are the number on the tile of the game")
                 gamePosition()
                 game.displayGame()
@@ -262,8 +278,7 @@ def play_a_new_game():
                 status = game.checkStatus()
                 # print(status)
         game.makeMove(move, game.getCurrentPlayer())
-        print("\nHere are the number on the tile of the game")
-        gamePosition()
+        print("\nGame End!!")
         game.displayGame()
         if status == 1:
             print("\nCongratulations: You WON\n")
