@@ -11,7 +11,6 @@ class tictactoe:
     # 0 1 2
     # 3 4 5
     # 6 7 8
-
     def __init__(self):
         self.structure = ['-'] * 9            # let 0 be the initial state of game
         self.currentPlayer = 'h'              # h <- human
@@ -68,7 +67,10 @@ class tictactoe:
     
     def makeMove(self, position, player):
         pos = int(position)
+        # while self.structure[pos] != '-':
+        #     pos = int(input("Move not available, try another value: "))
         self.structure[pos] = player
+        return pos
 
     def playerWon(self, player, winLine):
         # return, True <- player wins, False otherwise 
@@ -144,12 +146,11 @@ class tictactoe:
 
     
 class MonteCarloSearchTree():
-
     def __init__(self, game):
         self.game = game
         self.structure = self.game.getStructure()
         self.state = self.game.checkStatus()
-        self.playouts = 10000
+        self.playouts = 1000
 
     def randomPlayOuts(self, move):
         temp_game = copy.deepcopy(self.game) #self.game.temp_puzzle()
@@ -185,7 +186,7 @@ class MonteCarloSearchTree():
         maxWins = {k: 0 for k in legal_moves}
         # print(maxWins)
         for i in legal_moves:
-            for j in range(10000):
+            for j in range(1000):
                 maxWins[i] = maxWins[i] + self.randomPlayOuts(i)
         # print(maxWins)
         maxW = legal_moves[0]
@@ -208,72 +209,71 @@ def gamePosition():
 
 # Running game
 def play_a_new_game():
-    game = tictactoe()
-    mcst = MonteCarloSearchTree(game)
-    status = game.checkStatus()
-    print("\nHere the game begins, GOOD LUCK!!!")
-    start = input("\nWanna start first? (type y/n): ")
-    if(start.lower() == 'y'):
-        game.setFlag(False)
-        print("\nHere are the number on the tile of the game")
-        gamePosition()
-        game.displayGame()
-        move = input("\nEnter the number of the tile to make your move: ")
-    elif (start.lower() == 'n'):
-        game.nextPlayer()
-        mcst.makeMove()
-        game.nextPlayer()
-        print("\nHere are the number on the tile of the game")
-        gamePosition()
-        game.displayGame()
-        move = input("\nEnter the number of the tile to make your move: ")
-    else:
-        game.setFlag(False)
-        print("\nLooks like you are confused, I will let you start first!!")
-        print("\nHere are the number on the tile of the game")
-        gamePosition()
-        game.displayGame()
-        move = input("\nEnter the number of the tile to make your move: ")
-    while (status == -1):
-        game.makeMove(move, game.getCurrentPlayer())
-        print("\nHere are the number on the tile of the game")
-        gamePosition()
-        game.displayGame()
-        # print(game.getCurrentPlayer())
-        game.nextPlayer()
-        # print(game.getCurrentPlayer())
-        # status = game.checkStatus()
-        # print(status)
-        mcst.makeMove()
+    gamecontinue = 'y'
+
+    while gamecontinue.lower() == 'y':
+        game = tictactoe()
+        mcst = MonteCarloSearchTree(game)
         status = game.checkStatus()
-        # print(status)
-        if (status == -1):
+        print("\nHere the game begins, GOOD LUCK!!!")
+        start = input("\nWanna start first? (type y/n): ")
+        if(start.lower() == 'y'):
+            game.setFlag(False)
+            print("\nHere are the number on the tile of the game")
+            gamePosition()
+            game.displayGame()
+            move = input("\nEnter the number of the tile to make your move: ")
+        elif (start.lower() == 'n'):
+            game.nextPlayer()
+            mcst.makeMove()
             game.nextPlayer()
             print("\nHere are the number on the tile of the game")
             gamePosition()
             game.displayGame()
             move = input("\nEnter the number of the tile to make your move: ")
-            # temp_game = tictactoe()
-            # temp_game.structure = game.structure[:]
-            # temp_game.currentPlayer = game.getCurrentPlayer()
-            temp_game = game.temp_puzzle()
-            game.makeMove(move, temp_game.getCurrentPlayer())
+        else:
+            game.setFlag(False)
+            print("\nLooks like you are confused, I will let you start first!!")
             print("\nHere are the number on the tile of the game")
             gamePosition()
             game.displayGame()
+            move = input("\nEnter the number of the tile to make your move: ")
+        while (status == -1):
+            move = game.makeMove(move, game.getCurrentPlayer())
+            print("\nHere are the number on the tile of the game")
+            gamePosition()
+            game.displayGame()
+            # print(game.getCurrentPlayer())
+            game.nextPlayer()
+            mcst.makeMove()
             status = game.checkStatus()
             # print(status)
-    game.makeMove(move, game.getCurrentPlayer())
-    print("\nHere are the number on the tile of the game")
-    gamePosition()
-    game.displayGame()
-    if status == 1:
-        print("\nCongratulations: You WON\n")
-    elif status == 2:
-        print("\nYou lost, trya again\n")
-    else:
-        print("\nDRAW: No one wins\n")
+            if (status == -1):
+                game.nextPlayer()
+                print("\nHere are the number on the tile of the game")
+                gamePosition()
+                game.displayGame()
+                move = input("\nEnter the number of the tile to make your move: ")
+                temp_game = game.temp_puzzle()
+                move = game.makeMove(move, temp_game.getCurrentPlayer())
+                print("\nHere are the number on the tile of the game")
+                gamePosition()
+                game.displayGame()
+                status = game.checkStatus()
+                # print(status)
+        game.makeMove(move, game.getCurrentPlayer())
+        print("\nHere are the number on the tile of the game")
+        gamePosition()
+        game.displayGame()
+        if status == 1:
+            print("\nCongratulations: You WON\n")
+        elif status == 2:
+            print("\nYou lost, try again\n")
+        else:
+            print("\nDRAW: No one wins\n")
+        gamecontinue = input("Type 'y' to try again or press any key to terminate: \n")
 
 
 if __name__ == '__main__':
   play_a_new_game()
+
